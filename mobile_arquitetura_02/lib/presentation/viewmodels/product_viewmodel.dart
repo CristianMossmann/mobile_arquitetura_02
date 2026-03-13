@@ -1,32 +1,23 @@
-import 'package:flutter/material.dart';
-import '../../domain/entities/product.dart';
-import '../../domain/repositories/product_repository.dart';
-import '../../core/state/ui_state.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
+import 'package:mobile_arquitetura_1/domain/repositories/product_repository.dart';
+import 'package:mobile_arquitetura_1/presentation/viewmodels/product_state.dart';
 
-class ProductViewModel {
+class ProductViewmodel {
   final ProductRepository repository;
 
-  final ValueNotifier<List<Product>> products = ValueNotifier([]);
+  final ValueNotifier<ProductState> state = ValueNotifier(const ProductState());
 
-  final ValueNotifier<UiState> state = ValueNotifier(UiState.initial);
-
-  final ValueNotifier<String?> errorMessage = ValueNotifier(null);
-
-  ProductViewModel(this.repository);
+  ProductViewmodel(this.repository);
 
   Future<void> loadProducts() async {
-    state.value = UiState.loading;
+    state.value = state.value.copyWith(isLoading: true);
 
     try {
-      final result = await repository.getProducts();
-
-      products.value = result;
-
-      state.value = UiState.success;
+      final products = await repository.getProducts();
+      state.value = state.value.copyWith(isLoading: true, products: products);
     } catch (e) {
-      errorMessage.value = e.toString();
-
-      state.value = UiState.error;
+      state.value = state.value.copyWith(isLoading: false, error: e.toString());
     }
   }
 }

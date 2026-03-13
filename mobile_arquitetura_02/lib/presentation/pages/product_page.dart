@@ -1,59 +1,41 @@
 import 'package:flutter/material.dart';
-import '../viewmodels/product_viewmodel.dart';
-import '../../domain/entities/product.dart';
-import '../../core/state/ui_state.dart';
+import 'package:mobile_arquitetura_1/presentation/viewmodels/product_state.dart';
+import 'package:mobile_arquitetura_1/presentation/viewmodels/product_viewmodel.dart';
 
 class ProductPage extends StatelessWidget {
-  final ProductViewModel viewModel;
-
-  const ProductPage({super.key, required this.viewModel});
+  final ProductViewmodel viewmodel;
+  const ProductPage({super.key, required this.viewmodel});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Products")),
-
-      body: ValueListenableBuilder<UiState>(
-        valueListenable: viewModel.state,
+      body: ValueListenableBuilder<ProductState>(
+        valueListenable: viewmodel.state,
         builder: (context, state, _) {
-          if (state == UiState.loading) {
+          if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state == UiState.error) {
-            return Center(
-              child: Text(
-                viewModel.errorMessage.value ?? "Erro ao carregar dados",
-              ),
-            );
+          if (state.error != null) {
+            return Center(child: Text(state.error!));
           }
+          return ListView.builder(
+            itemCount: state.products.length,
+            itemBuilder: (context, index) {
+              final product = state.products[index];
 
-          if (state == UiState.success) {
-            return ValueListenableBuilder<List<Product>>(
-              valueListenable: viewModel.products,
-              builder: (context, products, _) {
-                return ListView.builder(
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-
-                    return ListTile(
-                      leading: Image.network(product.image),
-                      title: Text(product.title),
-                      subtitle: Text("\$${product.price}"),
-                    );
-                  },
-                );
-              },
-            );
-          }
-
-          return const Center(child: Text("Clique no botão para carregar"));
+              return ListTile(
+                leading: Image.network(product.image),
+                title: Text(product.title),
+                subtitle: Text("\$${product.price}"),
+              );
+            },
+          );
         },
       ),
-
       floatingActionButton: FloatingActionButton(
-        onPressed: viewModel.loadProducts,
+        onPressed: viewmodel.loadProducts,
         child: const Icon(Icons.download),
       ),
     );

@@ -1,20 +1,23 @@
-import '../../domain/entities/product.dart';
-import '../../domain/repositories/product_repository.dart';
-import '../datasources/product_remote_datasource.dart';
+import 'package:mobile_arquitetura_1/core/errors/failure.dart';
+import 'package:mobile_arquitetura_1/data/datasources/product_cache_datasource.dart';
+import 'package:mobile_arquitetura_1/data/datasources/product_remote_datasource.dart';
+import 'package:mobile_arquitetura_1/domain/entities/product.dart';
+import 'package:mobile_arquitetura_1/domain/repositories/product_repository.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
-  final ProductRemoteDatasource datasource;
+  final ProductRemoteDatasource remote;
+  final ProductCacheDatasource cache;
 
-  List<Product>? cache;
-
-  ProductRepositoryImpl(this.datasource);
+  ProductRepositoryImpl(this.remote, this.cache);
 
   @override
   Future<List<Product>> getProducts() async {
     try {
-      final models = await datasource.getProducts();
+      final models = await remote.getProducts();
 
-      final products = models
+      cache.save(models);
+
+      return models
           .map(
             (m) => Product(
               id: m.id,
@@ -24,16 +27,21 @@ class ProductRepositoryImpl implements ProductRepository {
             ),
           )
           .toList();
-
-      cache = products;
-
-      return products;
     } catch (e) {
-      if (cache != null) {
-        return cache!;
+      final cached = cache.get();
+      if (cached != null) {
+        return cached
+            .map(
+              (m) => Product(
+                id: m.id,
+                title: m.title,
+                price: m.price,
+                image: m.image,
+              ),
+            )
+            .toList();
       }
-
-      throw Exception("Erro ao carregar produtos");
+      throw Failure("Nao foi possivel carregar os produtos!");
     }
   }
 }

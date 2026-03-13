@@ -1,6 +1,6 @@
 {
-    "name": "product_app",
-    "short_name": "product_app",
+    "name": "mobile_arquitetura_1",
+    "short_name": "mobile_arquitetura_1",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
